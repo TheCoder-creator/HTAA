@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTA Admin Dashboard</title>
+    <style>
+        :root { --bg: #0a0a0f; --card: #13131B; --border: #222233; --fg: #EAEAEF; --muted: #5E5E78; --accent: #00D68F; --danger: #FF4D6A; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 12px; }
+        h1 { font-size: 1.5rem; color: var(--accent); }
+        button { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-refresh { background: var(--border); color: var(--fg); }
+        .btn-refresh:hover { background: var(--muted); }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .info { flex: 1; min-width: 200px; }
+        .addr { font-family: monospace; font-size: 14px; color: var(--fg); margin-bottom: 4px; word-break: break-all; }
+        .nick { font-size: 12px; color: var(--muted); }
+        .status { font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 99px; }
+        .status-safe { background: rgba(0,214,143,0.1); color: var(--accent); }
+        .status-blocked { background: rgba(255,77,106,0.1); color: var(--danger); }
+        .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-block { background: var(--danger); color: #fff; }
+        .btn-block:hover { background: #ff6680; }
+        .btn-unblock { background: var(--accent); color: #000; }
+        .btn-unblock:hover { background: #00f5a0; }
+        .btn-save { background: var(--accent); color: #000; }
+        input[type="text"] { padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); color: var(--fg); border-radius: 6px; font-size: 12px; outline: none; width: 120px; }
+        input[type="text"]:focus { border-color: var(--accent); }
+        .empty { text-align: center; margin-top: 20vh; color: var(--muted); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>HTA Control Panel</h1>
+        <button class="btn-refresh" onclick="loadUsers()">Refresh List</button>
+    </div>
+
+    <div id="user-list">
+        <div class="empty">Loading users...</div>
+    </div>
+
+    <script>
+        const HZ_URL = 'https://xlisbmtenekjmundxbcn.supabase.co';
+        const HZ_KEY = 'sb_publishable_Cvs-AiKPTHrC_tfGfwlpSQ_4Hir5Cva';
+
+        async function loadUsers() {
+            const res = await fetch(`${HZ_URL}/rest/v1/users?select=*&order=address.asc`, {
+                headers: { 'apikey': HZ_KEY }
+            });
+            const users = await res.json();
+            const list = document.getElementById('user-list');
+
+            if (users.length === 0) {
+                list.innerHTML = '<div class="empty">No users have visited your site yet.</div>';
+                return;
+            }
+
+            list.innerHTML = users.map(u => {
+                const statusClass = u.is_blocked ? 'status-blocked' : 'status-safe';
+                const statusText = u.is_blocked ? 'BLOCKED' : 'SAFE';
+                
+                return `
+                <div class="card">
+                    <div class="info">
+                        <div class="addr">${u.address}</div>
+                        <div class="nick">Nickname: ${u.nickname}</div>
+                    </div>
+                    <div class="actions">
+                        <span class="status ${statusClass}">${statusText}</span>
+                        <input type="text" id="nick-${u.address}" placeholder="Set Nickname" value="${u.nickname === 'Unknown' ? '' : u.nickname}">
+                        <button class="btn-sm btn-save" onclick="saveNick('${u.address}')">Save Name</button>
+                        ${u.is_blocked 
+                            ? `<button class="btn-sm btn-unblock" onclick="toggleBlock('${u.address}', false)">Unblock</button>` 
+                            : `<button class="btn-sm btn-block" onclick="toggleBlock('${u.address}', true)">Block</button>`
+                        }
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function saveNick(address) {
+            const input = document.getElementById(`nick-${address}`);
+            const newNick = input.value.trim() || 'Unknown';
+            
+            await fetch(`${HZ_URL}/rest/v1/users?address=eq.${encodeURIComponent(address)}`, {
+                method: 'PATCH',
+                headers: { 'apikey': HZ_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ nickname: newNick })
+            });
+            loadUsers();
+        }
+
+        async function toggleBlock(address, blockStatus) {
+            await fetch(`${HZ_URL}/rest/v1/users?address=eq.${encodeURIComponent(address)}`, {
+                method: 'PATCH',
+                headers: { 'apikey': HZ_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ is_blocked: blockStatus })
+            });
+            loadUsers();
+        }
+
+        // Load users when you open the dashboard
+        loadUsers();
+    </script>
+</body>
+</html>
