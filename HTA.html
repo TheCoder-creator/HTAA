@@ -5,416 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTA Admin Dashboard</title>
     <style>
-        :root {
-            --bg: #0a0a0f;
-            --card: #13131B;
-            --border: #222233;
-            --fg: #EAEAEF;
-            --muted: #5E5E78;
-            --accent: #00D68F;
-            --danger: #FF4D6A;
-            --warning: #FFCC00;
-        }
-
+        :root { --bg: #0a0a0f; --card: #13131B; --border: #222233; --fg: #EAEAEF; --muted: #5E5E78; --accent: #00D68F; --danger: #FF4D6A; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: var(--bg);
-            color: var(--fg);
-            font-family: system-ui, sans-serif;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        h1 {
-            font-size: 1.6rem;
-            color: var(--accent);
-        }
-
-        h2 {
-            font-size: 1.1rem;
-            color: var(--fg);
-            margin: 18px 0 12px;
-        }
-
-        button {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-            transition: 0.2s;
-        }
-
-        .btn-refresh {
-            background: var(--border);
-            color: var(--fg);
-        }
-
-        .btn-refresh:hover {
-            background: var(--muted);
-        }
-
-        .panel {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 16px;
-        }
-
-        .broadcast-box {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 110px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            color: var(--fg);
-            border-radius: 10px;
-            padding: 12px;
-            resize: vertical;
-            font-family: inherit;
-            outline: none;
-        }
-
-        textarea:focus {
-            border-color: var(--accent);
-        }
-
-        .broadcast-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-send {
-            background: var(--accent);
-            color: #000;
-        }
-
-        .btn-disable {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        .btn-disable:hover {
-            background: #ff6680;
-        }
-
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .info {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .addr {
-            font-family: monospace;
-            font-size: 14px;
-            color: var(--fg);
-            margin-bottom: 4px;
-            word-break: break-all;
-        }
-
-        .nick {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .status {
-            font-size: 12px;
-            font-weight: bold;
-            padding: 4px 10px;
-            border-radius: 99px;
-        }
-
-        .status-safe {
-            background: rgba(0,214,143,0.1);
-            color: var(--accent);
-        }
-
-        .status-blocked {
-            background: rgba(255,77,106,0.1);
-            color: var(--danger);
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .btn-block {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        .btn-unblock {
-            background: var(--accent);
-            color: #000;
-        }
-
-        .btn-save {
-            background: var(--accent);
-            color: #000;
-        }
-
-        input[type="text"] {
-            padding: 6px 10px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            color: var(--fg);
-            border-radius: 6px;
-            font-size: 12px;
-            outline: none;
-            width: 120px;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--accent);
-        }
-
-        .empty {
-            text-align: center;
-            margin-top: 18vh;
-            color: var(--muted);
-        }
-
-        .status-line {
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 8px;
-        }
-
-        .status-line.error {
-            color: var(--danger);
-        }
+        body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 12px; }
+        h1 { font-size: 1.5rem; color: var(--accent); }
+        button { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-refresh { background: var(--border); color: var(--fg); }
+        .btn-refresh:hover { background: var(--muted); }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .info { flex: 1; min-width: 200px; }
+        .addr { font-family: monospace; font-size: 14px; color: var(--fg); margin-bottom: 4px; word-break: break-all; }
+        .nick { font-size: 12px; color: var(--muted); }
+        .status { font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 99px; }
+        .status-safe { background: rgba(0,214,143,0.1); color: var(--accent); }
+        .status-blocked { background: rgba(255,77,106,0.1); color: var(--danger); }
+        .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-block { background: var(--danger); color: #fff; }
+        .btn-block:hover { background: #ff6680; }
+        .btn-unblock { background: var(--accent); color: #000; }
+        .btn-unblock:hover { background: #00f5a0; }
+        .btn-save { background: var(--accent); color: #000; }
+        .btn-delete { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-delete:hover { background: var(--danger); color: #fff; }
+        input[type="text"] { padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); color: var(--fg); border-radius: 6px; font-size: 12px; outline: none; width: 120px; }
+        input[type="text"]:focus { border-color: var(--accent); }
+        .empty { text-align: center; margin-top: 20vh; color: var(--muted); }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>HTA Control Panel</h1>
-        <button class="btn-refresh" onclick="refreshAll()">Refresh All</button>
+        <button class="btn-refresh" onclick="loadUsers()">Refresh List</button>
     </div>
 
-    <div class="panel">
-        <h2>Broadcast Message</h2>
-        <div class="broadcast-box">
-            <textarea id="broadcast-message" placeholder="Type the admin broadcast message..."></textarea>
-            <div class="broadcast-actions">
-                <button class="btn-send" onclick="sendBroadcast()">Send Broadcast</button>
-                <button class="btn-disable" onclick="disableBroadcast()">Disable Broadcast</button>
-            </div>
-            <div class="status-line" id="broadcast-status">Idle</div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <h2>Users</h2>
-        <div id="user-list">
-            <div class="empty">Loading users...</div>
-        </div>
+    <div id="user-list">
+        <div class="empty">Loading users...</div>
     </div>
 
     <script>
         const HZ_URL = 'https://xlisbmtenekjmundxbcn.supabase.co';
         const HZ_KEY = 'sb_publishable_Cvs-AiKPTHrC_tfGfwlpSQ_4Hir5Cva';
 
-        async function apiFetch(url, options = {}) {
-            const res = await fetch(url, {
-                ...options,
-                headers: {
-                    'apikey': HZ_KEY,
-                    'Authorization': `Bearer ${HZ_KEY}`,
-                    ...(options.headers || {})
-                }
-            });
-            return res;
-        }
-
         async function loadUsers() {
+            const res = await fetch(`${HZ_URL}/rest/v1/users?select=*&order=created_at.desc`, {
+                headers: { 'apikey': HZ_KEY }
+            });
+            const users = await res.json();
             const list = document.getElementById('user-list');
-            try {
-                const res = await apiFetch(`${HZ_URL}/rest/v1/users?select=*&order=address.asc`);
-                if (!res.ok) throw new Error(await res.text());
 
-                const users = await res.json();
-
-                if (!users || users.length === 0) {
-                    list.innerHTML = '<div class="empty">No users have visited your site yet.</div>';
-                    return;
-                }
-
-                list.innerHTML = users.map(u => {
-                    const statusClass = u.is_blocked ? 'status-blocked' : 'status-safe';
-                    const statusText = u.is_blocked ? 'BLOCKED' : 'SAFE';
-
-                    return `
-                    <div class="card">
-                        <div class="info">
-                            <div class="addr">${u.address}</div>
-                            <div class="nick">Nickname: ${u.nickname}</div>
-                        </div>
-                        <div class="actions">
-                            <span class="status ${statusClass}">${statusText}</span>
-                            <input type="text" id="nick-${u.address}" placeholder="Set Nickname" value="${u.nickname === 'Unknown' ? '' : u.nickname}">
-                            <button class="btn-sm btn-save" onclick="saveNick('${u.address}')">Save Name</button>
-                            ${u.is_blocked
-                                ? `<button class="btn-sm btn-unblock" onclick="toggleBlock('${u.address}', false)">Unblock</button>`
-                                : `<button class="btn-sm btn-block" onclick="toggleBlock('${u.address}', true)">Block</button>`
-                            }
-                        </div>
-                    </div>`;
-                }).join('');
-            } catch (err) {
-                console.error(err);
-                list.innerHTML = `<div class="empty">Failed to load users.</div>`;
-            }
-        }
-
-        async function saveNick(address) {
-            const input = document.getElementById(`nick-${address}`);
-            const newNick = input.value.trim() || 'Unknown';
-
-            try {
-                const res = await apiFetch(`${HZ_URL}/rest/v1/users?address=eq.${encodeURIComponent(address)}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({ nickname: newNick })
-                });
-
-                if (!res.ok) throw new Error(await res.text());
-                loadUsers();
-            } catch (err) {
-                alert('Save name failed:\n' + err.message);
-            }
-        }
-
-        async function toggleBlock(address, blockStatus) {
-            try {
-                const res = await apiFetch(`${HZ_URL}/rest/v1/users?address=eq.${encodeURIComponent(address)}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({ is_blocked: blockStatus })
-                });
-
-                if (!res.ok) throw new Error(await res.text());
-                loadUsers();
-            } catch (err) {
-                alert('Block update failed:\n' + err.message);
-            }
-        }
-
-        async function sendBroadcast() {
-            const message = document.getElementById('broadcast-message').value.trim();
-            const status = document.getElementById('broadcast-status');
-
-            if (!message) {
-                status.className = 'status-line error';
-                status.innerText = 'Type a message first.';
+            if (users.length === 0) {
+                list.innerHTML = '<div class="empty">No users have visited your site yet.</div>';
                 return;
             }
 
-            status.className = 'status-line';
-            status.innerText = 'Sending broadcast...';
-
-            try {
-                const res = await apiFetch(`${HZ_URL}/rest/v1/broadcasts`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        enabled: true
-                    })
-                });
-
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text);
-                }
-
-                status.innerText = 'Broadcast sent.';
-                document.getElementById('broadcast-message').value = '';
-            } catch (err) {
-                console.error(err);
-                status.className = 'status-line error';
-                status.innerText = 'Broadcast failed: ' + err.message;
-            }
+            list.innerHTML = users.map(u => {
+                const statusClass = u.is_blocked ? 'status-blocked' : 'status-safe';
+                const statusText = u.is_blocked ? 'BLOCKED' : 'SAFE';
+                
+                return `
+                <div class="card">
+                    <div class="info">
+                        <div class="addr">${u.computer_id}</div>
+                        <div class="nick">Nickname: ${u.nickname}</div>
+                    </div>
+                    <div class="actions">
+                        <span class="status ${statusClass}">${statusText}</span>
+                        <input type="text" id="nick-${u.id}" placeholder="Set Nickname" value="${u.nickname === 'Unknown' ? '' : u.nickname}">
+                        <button class="btn-sm btn-save" onclick="saveNick(${u.id})">Save Name</button>
+                        ${u.is_blocked 
+                            ? `<button class="btn-sm btn-unblock" onclick="toggleBlock(${u.id}, false)">Unblock</button>` 
+                            : `<button class="btn-sm btn-block" onclick="toggleBlock(${u.id}, true)">Block</button>`
+                        }
+                        <button class="btn-sm btn-delete" onclick="confirmDelete(${u.id}, '${u.computer_id}')">Delete</button>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
-        async function disableBroadcast() {
-            const status = document.getElementById('broadcast-status');
-            status.className = 'status-line';
-            status.innerText = 'Disabling broadcast...';
-
-            try {
-                const res = await apiFetch(`${HZ_URL}/rest/v1/broadcasts?enabled=eq.true`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({ enabled: false })
-                });
-
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text);
-                }
-
-                status.innerText = 'Broadcast disabled.';
-            } catch (err) {
-                console.error(err);
-                status.className = 'status-line error';
-                status.innerText = 'Disable failed: ' + err.message;
-            }
-        }
-
-        function refreshAll() {
+        async function saveNick(id) {
+            const input = document.getElementById(`nick-${id}`);
+            const newNick = input.value.trim() || 'Unknown';
+            
+            await fetch(`${HZ_URL}/rest/v1/users?id=eq.${id}`, {
+                method: 'PATCH',
+                headers: { 'apikey': HZ_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ nickname: newNick })
+            });
             loadUsers();
         }
 
+        async function toggleBlock(id, blockStatus) {
+            await fetch(`${HZ_URL}/rest/v1/users?id=eq.${id}`, {
+                method: 'PATCH',
+                headers: { 'apikey': HZ_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ is_blocked: blockStatus })
+            });
+            loadUsers();
+        }
+
+        function confirmDelete(id, computerId) {
+            if (confirm(`Are you sure you want to permanently delete this user?\n\nID: ${computerId}\n\nNote: If they visit again, they will be re-added.`)) {
+                deleteUser(id);
+            }
+        }
+
+        async function deleteUser(id) {
+            await fetch(`${HZ_URL}/rest/v1/users?id=eq.${id}`, {
+                method: 'DELETE',
+                headers: { 'apikey': HZ_KEY }
+            });
+            loadUsers();
+        }
+
+        // Load users when you open the dashboard
         loadUsers();
     </script>
 </body>
