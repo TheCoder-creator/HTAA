@@ -8,12 +8,24 @@
         :root { --bg: #0a0a0f; --card: #13131B; --border: #222233; --fg: #EAEAEF; --muted: #5E5E78; --accent: #00D68F; --danger: #FF4D6A; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 12px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
         h1 { font-size: 1.5rem; color: var(--accent); }
+        .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         button { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
         .btn-refresh { background: var(--border); color: var(--fg); }
         .btn-refresh:hover { background: var(--muted); }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .search-wrap { position: relative; display: flex; align-items: center; }
+        .search-wrap svg { position: absolute; left: 12px; color: var(--muted); pointer-events: none; }
+        .search-input { padding: 10px 14px 10px 38px; background: var(--card); border: 1px solid var(--border); color: var(--fg); border-radius: 8px; font-size: 13px; outline: none; width: 280px; transition: border-color 0.2s; }
+        .search-input::placeholder { color: var(--muted); }
+        .search-input:focus { border-color: var(--accent); }
+        .search-clear { position: absolute; right: 10px; background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px 6px; font-size: 16px; line-height: 1; display: none; }
+        .search-clear.visible { display: block; }
+        .search-clear:hover { color: var(--fg); }
+        .results-count { font-size: 12px; color: var(--muted); margin-bottom: 14px; padding-left: 2px; }
+        .results-count span { color: var(--accent); font-weight: 700; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; animation: cardIn 0.25s ease; }
+        @keyframes cardIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .info { flex: 1; min-width: 200px; }
         .addr { font-family: monospace; font-size: 14px; color: var(--fg); margin-bottom: 4px; word-break: break-all; }
         .nick { font-size: 12px; color: var(--muted); }
@@ -32,14 +44,24 @@
         input[type="text"] { padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); color: var(--fg); border-radius: 6px; font-size: 12px; outline: none; width: 120px; }
         input[type="text"]:focus { border-color: var(--accent); }
         .empty { text-align: center; margin-top: 20vh; color: var(--muted); }
+        mark { background: rgba(0,214,143,0.25); color: var(--accent); border-radius: 2px; padding: 0 1px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>HTA Control Panel</h1>
-        <button class="btn-refresh" onclick="loadUsers()">Refresh List</button>
+        <div class="header-actions">
+            <div class="search-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="search-input" id="search-box" placeholder="Search ID or nickname..." oninput="handleSearch()">
+                <button class="search-clear" id="search-clear" onclick="clearSearch()">&times;</button>
+            </div>
+            <button class="btn-refresh" onclick="loadUsers()">Refresh List</button>
+        </div>
     </div>
+
+    <div class="results-count" id="results-count"></div>
 
     <div id="user-list">
         <div class="empty">Loading users...</div>
@@ -49,34 +71,74 @@
         const HZ_URL = 'https://xlisbmtenekjmundxbcn.supabase.co';
         const HZ_KEY = 'sb_publishable_Cvs-AiKPTHrC_tfGfwlpSQ_4Hir5Cva';
 
+        let allUsers = [];
+
         async function loadUsers() {
             const res = await fetch(`${HZ_URL}/rest/v1/users?select=*&order=created_at.desc`, {
                 headers: { 'apikey': HZ_KEY }
             });
-            const users = await res.json();
+            allUsers = await res.json();
+            renderList();
+        }
+
+        /* Highlight matching text */
+        function highlight(text, query) {
+            if (!query) return text;
+            const esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp(`(${esc})`, 'gi'), '<mark>$1</mark>');
+        }
+
+        function renderList() {
+            const query = (document.getElementById('search-box').value || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('search-clear');
+            clearBtn.classList.toggle('visible', query.length > 0);
+
+            const filtered = allUsers.filter(u =>
+                u.computer_id.toLowerCase().includes(query) ||
+                u.nickname.toLowerCase().includes(query)
+            );
+
+            const countEl = document.getElementById('results-count');
+            if (allUsers.length > 0) {
+                if (query) {
+                    countEl.innerHTML = `Showing <span>${filtered.length}</span> of ${allUsers.length} users`;
+                } else {
+                    countEl.innerHTML = `<span>${allUsers.length}</span> users total`;
+                }
+            } else {
+                countEl.innerHTML = '';
+            }
+
             const list = document.getElementById('user-list');
 
-            if (users.length === 0) {
+            if (allUsers.length === 0) {
                 list.innerHTML = '<div class="empty">No users have visited your site yet.</div>';
                 return;
             }
 
-            list.innerHTML = users.map(u => {
+            if (filtered.length === 0) {
+                list.innerHTML = `<div class="empty">No users match "<strong>${query}</strong>"</div>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map(u => {
                 const statusClass = u.is_blocked ? 'status-blocked' : 'status-safe';
                 const statusText = u.is_blocked ? 'BLOCKED' : 'SAFE';
-                
+                const idDisplay = highlight(u.computer_id, query);
+                const nickDisplay = highlight(u.nickname, query);
+
                 return `
                 <div class="card">
                     <div class="info">
-                        <div class="addr">${u.computer_id}</div>
-                        <div class="nick">Nickname: ${u.nickname}</div>
+                        <div class="addr">${idDisplay}</div>
+                        <div class="nick">Nickname: ${nickDisplay}</div>
                     </div>
                     <div class="actions">
                         <span class="status ${statusClass}">${statusText}</span>
                         <input type="text" id="nick-${u.id}" placeholder="Set Nickname" value="${u.nickname === 'Unknown' ? '' : u.nickname}">
                         <button class="btn-sm btn-save" onclick="saveNick(${u.id})">Save Name</button>
-                        ${u.is_blocked 
-                            ? `<button class="btn-sm btn-unblock" onclick="toggleBlock(${u.id}, false)">Unblock</button>` 
+                        ${u.is_blocked
+                            ? `<button class="btn-sm btn-unblock" onclick="toggleBlock(${u.id}, false)">Unblock</button>`
                             : `<button class="btn-sm btn-block" onclick="toggleBlock(${u.id}, true)">Block</button>`
                         }
                         <button class="btn-sm btn-delete" onclick="confirmDelete(${u.id}, '${u.computer_id}')">Delete</button>
@@ -85,10 +147,20 @@
             }).join('');
         }
 
+        function handleSearch() {
+            renderList();
+        }
+
+        function clearSearch() {
+            document.getElementById('search-box').value = '';
+            renderList();
+            document.getElementById('search-box').focus();
+        }
+
         async function saveNick(id) {
             const input = document.getElementById(`nick-${id}`);
             const newNick = input.value.trim() || 'Unknown';
-            
+
             await fetch(`${HZ_URL}/rest/v1/users?id=eq.${id}`, {
                 method: 'PATCH',
                 headers: { 'apikey': HZ_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
@@ -120,7 +192,6 @@
             loadUsers();
         }
 
-        // Load users when you open the dashboard
         loadUsers();
     </script>
 </body>
