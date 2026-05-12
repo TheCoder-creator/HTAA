@@ -5,16 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTA Admin Dashboard</title>
     <style>
-        :root { --bg: #0a0a0f; --card: #13131B; --border: #222233; --fg: #EAEAEF; --muted: #5E5E78; --accent: #00D68F; --danger: #FF4D6A; --bot-color: #888899; }
+        :root { --bg: #0a0a0f; --card: #13131B; --border: #222233; --fg: #EAEAEF; --muted: #5E5E78; --accent: #00D68F; --danger: #FF4D6A; --bot-color: #888899; --warning: #ff9500; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
         h1 { font-size: 1.5rem; color: var(--accent); }
         .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         button { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        button:disabled { cursor: not-allowed; opacity: 0.8; }
         .btn-refresh { background: var(--border); color: var(--fg); }
         .btn-refresh:hover { background: var(--muted); }
         
+        /* Wipe Button Styles */
+        .btn-wipe { background: transparent; color: var(--warning); border: 1px solid var(--warning); }
+        .btn-wipe:hover:not(:disabled) { background: var(--warning); color: #000; }
+        .btn-wipe.active-wipe { background: var(--warning); color: #000; border-color: var(--warning); }
+
         /* Filter Bar */
         .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
         .filter-btn { padding: 6px 14px; font-size: 12px; background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 99px; cursor: pointer; }
@@ -75,6 +81,7 @@
                 <input type="text" class="search-input" id="search-box" placeholder="Search ID or nickname..." oninput="handleSearch()">
                 <button class="search-clear" id="search-clear" onclick="clearSearch()">&times;</button>
             </div>
+            <button class="btn-wipe" id="wipe-btn" onclick="triggerGlobalWipe()">Wipe All LocalStorage</button>
             <button class="btn-refresh" onclick="loadUsers()">Refresh List</button>
         </div>
     </div>
@@ -98,6 +105,7 @@
 
         let allUsers = [];
         let currentFilter = 'all';
+        let wipeInterval;
 
         async function loadUsers() {
             const res = await fetch(`${HZ_URL}/rest/v1/users?select=*&order=created_at.desc`, {
@@ -105,7 +113,61 @@
             });
             allUsers = await res.json();
             renderList();
+            checkWipeStatus(); // Check wipe status whenever we load users
         }
+
+        // ==========================================
+        // MEMORY WIPE COMMAND SYSTEM
+        // ==========================================
+        async function checkWipeStatus() {
+            try {
+                const res = await fetch(`${HZ_URL}/rest/v1/system_settings?id=eq.1&select=wipe_on`, {
+                    headers: { 'apikey': HZ_KEY }
+                });
+                const data = await res.json();
+                const isWiping = data.length > 0 && data[0].wipe_on === true;
+                
+                const btn = document.getElementById('wipe-btn');
+                if (isWiping) {
+                    btn.innerText = "Wiping in progress...";
+                    btn.classList.add('active-wipe');
+                    btn.disabled = true;
+                    
+                    // Start polling to see when it finishes
+                    if (!wipeInterval) {
+                        wipeInterval = setInterval(checkWipeStatus, 5000); // Check every 5 seconds
+                    }
+                } else {
+                    btn.innerText = "Wipe All LocalStorage";
+                    btn.classList.remove('active-wipe');
+                    btn.disabled = false;
+                    
+                    // Stop polling
+                    if (wipeInterval) {
+                        clearInterval(wipeInterval);
+                        wipeInterval = null;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to check wipe status", e);
+            }
+        }
+
+        async function triggerGlobalWipe() {
+            if (!confirm("WARNING: This will force all active Horizon OS users to completely wipe their browser cache and generate a NEW Computer ID.\n\nThe button will turn orange and monitor the process until everyone has logged in and been wiped.")) return;
+            
+            await fetch(`${HZ_URL}/rest/v1/system_settings?id=eq.1`, {
+                method: 'PATCH',
+                headers: { 'apikey': HZ_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ wipe_on: true })
+            });
+            
+            checkWipeStatus();
+        }
+
+        // ==========================================
+        // STANDARD ADMIN UI FUNCTIONS
+        // ==========================================
 
         function highlight(text, query) {
             if (!query) return text;
@@ -237,7 +299,6 @@
             if (botCount === 0) return alert("No bots to delete.");
             if (!confirm(`Are you sure you want to permanently delete ${botCount} bot(s)?`)) return;
 
-            // Delete all where is_bot = true
             await fetch(`${HZ_URL}/rest/v1/users?is_bot=eq.true`, {
                 method: 'DELETE',
                 headers: { 'apikey': HZ_KEY }
@@ -259,6 +320,7 @@
             loadUsers();
         }
 
+        // Initial Load
         loadUsers();
     </script>
 </body>
